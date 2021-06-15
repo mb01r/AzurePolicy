@@ -1,0 +1,136 @@
+{
+  "mode": "Indexed",
+  "policyRule": {
+    "if": {
+      "field": "type",
+      "equals": "Microsoft.Resources/subscriptions"
+    },
+    "then": {
+      "effect": "deployIfNotExists",
+      "details": {
+        "type": "Microsoft.Insights/diagnosticSettings",
+        "deploymentScope": "subscription",
+        "existenceCondition": {
+          "allOf": [
+            {
+              "count": {
+                "field": "Microsoft.Insights/diagnosticSettings/logs[*]",
+                "where": {
+                  "allOf": [
+                    {
+                      "field": "Microsoft.Insights/diagnosticSettings/logs[*].category",
+                      "in": "[parameters('diagnosticCategories')]"
+                    },
+                    {
+                      "field": "Microsoft.Insights/diagnosticSettings/logs[*].enabled",
+                      "equals": "true"
+                    }
+                  ]
+                }
+              },
+              "equals": "[length(parameters('diagnosticCategories'))]"
+            },
+            {
+              "field": "Microsoft.Insights/diagnosticSettings/workspaceId",
+              "equals": "[parameters('workspaceId')]"
+            }
+          ]
+        },
+        "roleDefinitionIds": [
+          "providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+          "/subscriptions/e4fa5f3e-ba07-4cef-b344-89a2f1a686ec/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+        ],
+        "deployment": {
+          "location": "eastus",
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "laWorkspaceId": {
+                  "type": "String"
+                }
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Insights/diagnosticSettings",
+                  "apiVersion": "2017-05-01-preview",
+                  "name": "SecurityAuditRequirments",
+                  "properties": {
+                    "workspaceId": "[parameters('laWorkspaceId')]",
+                    "logs": [
+                      {
+                        "category": "Administrative",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Security",
+                        "enabled": true
+                      },
+                      {
+                        "category": "ServiceHealth",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Alert",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Policy",
+                        "enabled": true
+                      },
+                      {
+                        "category": "ResourceHealth",
+                        "enabled": false
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "parameters": {
+              "laWorkspaceId": {
+                "value": "[parameters('workspaceId')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "diagnosticCategories": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Diagnostic Categories",
+        "description": "Array of diagnostic catagories to enable."
+      },
+      "allowedValues": [
+        "Administrative",
+        "Security",
+        "ServiceHealth",
+        "Alert",
+        "Recommendation",
+        "Policy",
+        "Autoscale",
+        "ResourceHealth"
+      ],
+      "defaultValue": [
+        "Administrative",
+        "Security",
+        "ServiceHealth",
+        "Alert",
+        "Policy",
+        "ResourceHealth"
+      ]
+    },
+    "workspaceId": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Log Analytics Workspace ID",
+        "description": "Log Analytics workspace resource Id used for log collection"
+      }
+    }
+  }
+}
